@@ -309,18 +309,18 @@ def getpicsyo(searchTerm, count): # Replace spaces ' ' in search term for '%20' 
             response = urllib2.urlopen(request)
             
             # Get results using JSON
-            results = simplejson.load(response)
-            data = results['responseData']
-            dataInfo = data['results']
+            try:
+                results = simplejson.load(response)
+                data = results['responseData']
+                dataInfo = data['results']
             
-            # Iterate for each result and get unescaped url
-            for myUrl in dataInfo:
-                count = count + 1
-                print count, myUrl['unescapedUrl']
-                try:
+                # Iterate for each result and get unescaped url
+                for myUrl in dataInfo:
+                    count = count + 1
+                    print count, myUrl['unescapedUrl']
                     myopener.retrieve(myUrl['unescapedUrl'],str(count)+'.jpg')
-                except:
-                    print 'Bad Download'
+            except:
+                print 'Bad Download'
         # Sleep for one second to prevent IP blocking from Google
             time.sleep(1)
     return count    
@@ -389,7 +389,7 @@ class picGrid(object):
         self.pic = original_picture #initializes the original image
         self.im = Image.open(self.pic) #opens original image
         self.imgheight, self.imgwidth = self.im.size #finds the size of the image
-        self.length = self.imgheight/60 #finds the length of each quadrant box, splitting height into 70
+        self.length = self.imgheight/70 #finds the length of each quadrant box, splitting height into 70
     
     def get_quadrants(self):
         '''Breaks the input image into quadrants and creates a list of their x,y coordinates'''
@@ -453,7 +453,7 @@ def compileImage(RGBmatches,original_picture,output):
         im = Image.open(imageName) #open each image 
         newImage.paste(im,(x,y,x+new_original.length,y+new_original.length)) #in the new image, paste the image that corresponds
         newImage.save(output) #save the newImage after each time it runs through the for loop
-    
+
 if __name__ == "__main__":
     # defined global variables
     global keyword, input_file, output
@@ -464,6 +464,7 @@ if __name__ == "__main__":
         keyword = get_keyword() #uses get_keyword screen to get keyword
         input_file = get_file_name() #uses get_file_name screen to retrieve file name
         output = get_output() #uses get_output to get a name for output song
+        print keyword, input_file,output
     
     # Creating the screen
     screen = pygame.display.set_mode((640, 480), 0, 32)
@@ -481,12 +482,14 @@ if __name__ == "__main__":
     for i in colors: #get pics of the keyword with each color
         c = getpicsyo(i + keyword, c)
     for count in range(1,97):
-        imgCrop(str(count) + '.jpg', count, input_file) #crops the image
+        try:
+            imgCrop(str(count) + '.jpg', count, input_file) #crops the image
+        except:
+            print 'no picture'
     dpicture =  pictionary(input_file) #finds the dictionary of rgb and each section of the original image
-    print createDictionary('CROPPED')
+    #print dpicture
     dimages = createDictionary('CROPPED') #finds the dictionary of rgb and each keyword image
     #print dimages
     RGBmatches = RGBmatch(dpicture, dimages) #creates dictionary of each RGB match files and section location\
-    print RGBmatches
+    #print RGBmatches
     compileImage(RGBmatches, input_file, output) #creates and saves the final image
-    Image.open(output) #opens the final image
